@@ -7,11 +7,12 @@
 
 import UIKit
 import FirebaseAuth
-//import Firebase
+import FirebaseDatabase
 
 class SignUpViewController: UIViewController {
 
-    
+    var typeOfUser = " "
+    private let database = Database.database().reference()
     @IBOutlet weak var emailTF: UITextField!
     @IBOutlet weak var passwordTF: UITextField!
     @IBOutlet weak var nameTF: UITextField!
@@ -52,23 +53,43 @@ class SignUpViewController: UIViewController {
             }
             else{
                 print("Sign Up Success!")
-                if self.avSwitch.isOn {
+                if self.avSwitch.isOn{
+                    self.typeOfUser = "Administrator"
+                }else{
+                    self.typeOfUser = "Voter"
+                }
+                let object : [String:Any] = [
+                    "name" : self.nameTF.text as Any,
+                    "age" : self.ageTF.text as Any,
+                    "phone" : self.phoneTF.text as Any,
+                    "address" : self.addressTF.text as Any,
+                    "username" : self.emailTF.text as Any,
+                    "password" : self.passwordTF.text as Any,
+                    "type" : self.typeOfUser,
+                    "noOfVotings" : 0
+                ]
+                let userID : String = (Auth.auth().currentUser?.uid)!
+                print("Current user ID is" + userID)
+                self.database.child("users").child(userID).setValue(object)
+                print("Object written!")
+                
+                if self.typeOfUser == "Administrator" {
                     //Administrator
                     let req = Auth.auth().currentUser?.createProfileChangeRequest();
                     req?.displayName = "Administrator"
                     req?.commitChanges(completion: nil)
-                    let storyboard = UIStoryboard(name: "Main", bundle: nil)
-                    let vc = storyboard.instantiateViewController(identifier:"Login")
-                    vc.modalPresentationStyle = .overFullScreen
-                    self.present(vc, animated: true)
-                    //self.performSegue(withIdentifier: "adminSegue", sender: nil)
+//                    let storyboard = UIStoryboard(name: "Main", bundle: nil)
+//                    let vc = storyboard.instantiateViewController(identifier:"Login")
+//                    vc.modalPresentationStyle = .overFullScreen
+//                    self.present(vc, animated: true)
+                    self.performSegue(withIdentifier: "adminSegue1", sender: nil)
                 }
                 else {
                     //Voter
                     let req = Auth.auth().currentUser?.createProfileChangeRequest();
                     req?.displayName = "Voter"
                     req?.commitChanges(completion: nil)
-                    self.performSegue(withIdentifier: "voterSegue", sender: nil)
+                    self.performSegue(withIdentifier: "voterSegue1", sender: nil)
                 }
             }
         }

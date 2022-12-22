@@ -77,11 +77,11 @@ class LoginViewController: UIViewController {
                 else {
                     print("Administrator")
                     print(Auth.auth().currentUser?.uid)
-                    let storyboard = UIStoryboard(name: "Main", bundle: nil)
-                    let vc = storyboard.instantiateViewController(identifier:"adminView")
-                    vc.modalPresentationStyle = .overFullScreen
-                    self.present(vc, animated: true)
-                    //self.performSegue(withIdentifier: "adminSegue", sender: nil)
+//                    let storyboard = UIStoryboard(name: "Main", bundle: nil)
+//                    let vc = storyboard.instantiateViewController(identifier:"adminView")
+//                    vc.modalPresentationStyle = .overFullScreen
+//                    self.present(vc, animated: true)
+                    self.performSegue(withIdentifier: "adminSegue", sender: nil)
                 }
             }
         }

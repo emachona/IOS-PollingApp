@@ -7,22 +7,45 @@
 
 import UIKit
 import FirebaseAuth
+import FirebaseDatabase
 
 class AdminViewController: UIViewController,
                            UITableViewDataSource, UITableViewDelegate{
 
     @IBOutlet weak var tableview: UITableView!
     
-    var glasanja : [String]!
+    private let ref = Database.database().reference()
+    let currUserID : String = (Auth.auth().currentUser?.uid)!
+//    var glasanja : [String]!
+    var glasanja = ["example"]
     
     override func viewDidLoad() {
+        getData()
         super.viewDidLoad()
-        
-        self.glasanja = ["Lokalni izbori", "Anketa za prisustvo",
-        "Peticija za zatvaranje na zooloshkata"]
         
         self.tableview.dataSource = self
         self.tableview.delegate = self
+    }
+    
+    func getData() {
+        ref.child("polls").observeSingleEvent(of: .value, with: { (snapshot) in
+            
+            print("There are \(snapshot.childrenCount) children found")
+
+            if snapshot.childrenCount > 0 {
+
+                for data in snapshot.children.allObjects as! [DataSnapshot] {
+                    if let data = data.value as? [String: Any] {
+                        
+                        print(data)
+                        print(data["question"] as Any)
+                        self.glasanja.append(data["question"] as? String ?? "N/A")
+                        print(self.glasanja)
+                        self.tableview.reloadData()
+                    }
+                }
+            }
+        })
     }
     
     @IBAction func signOutPressed(_ sender: Any) {
@@ -32,6 +55,10 @@ class AdminViewController: UIViewController,
         vc.modalPresentationStyle = .overFullScreen
         present(vc, animated: true)
     }
+    
+    @IBAction func unwindToFirstViewController(_ sender: UIStoryboardSegue) {
+         // No code needed, no need to connect the IBAction explicitely
+        }
     
     //MARK: Datasource
     
