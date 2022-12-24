@@ -13,6 +13,11 @@ class CreatePollViewController: UIViewController {
 
     private let ref = Database.database().reference()
     var userName = "Admin"
+    var start : String?
+    var end : String?
+    let formatter = DateFormatter()
+    let now = Date()
+    var status = "false"
     
     @IBOutlet weak var adminTF: UILabel!
     @IBOutlet weak var questionTF: UITextField!
@@ -45,6 +50,9 @@ class CreatePollViewController: UIViewController {
     }
     
     @IBAction func doneBtnPressed(_ sender: Any) {
+        if start?.isEmpty != nil && end?.isEmpty != nil {
+            status = "true"// ako start e pred deneshniot datum
+        }
         //proverka dali se popolneti site zadolzitelni polinja
         //ako ne se --abort
         create()
@@ -55,20 +63,20 @@ class CreatePollViewController: UIViewController {
         print("Current user ID is" + userID)
         
         let object : [String:String?] = [
-            "question" : self.questionTF.text!,
-            "ans1" : self.ans1TF.text!,
-            "ans2" : self.ans2TF.text!,
-            "ans3" : self.ans3TF.text!,
-            "ans4" : self.ans4TF.text!,
-            "ans5" : self.ans5TF.text!,
-            "ans6" : self.ans6TF.text,
-            "ans7" : self.ans7TF.text,
-            "ans8" : self.ans8TF.text,
-            "adminName" : self.userName,
+            "question" : questionTF.text!,
+            "ans1" : ans1TF.text!,
+            "ans2" : ans2TF.text!,
+            "ans3" : ans3TF.text!,
+            "ans4" : ans4TF.text!,
+            "ans5" : ans5TF.text!,
+            "ans6" : ans6TF.text,
+            "ans7" : ans7TF.text,
+            "ans8" : ans8TF.text,
+            "adminName" : userName,
             "adminId" : userID,
-            "startDate" : "denes",
-            "endDate" : "utre",
-            "active" : "false" // se proveruva dali now>startdate - ako da : true, ako ne : false
+            "startDate" : start,
+            "endDate" : end,
+            "active" : status
         ]
         
         self.ref.child("polls").childByAutoId().setValue(object)
@@ -77,6 +85,24 @@ class CreatePollViewController: UIViewController {
         let vc = storyboard.instantiateViewController(identifier:"adminView")
         vc.modalPresentationStyle = .overFullScreen
         self.present(vc, animated: true)
+    }
+    
+    
+    @IBAction func startDatePicked(_ sender: UIDatePicker) {
+        formatter.dateFormat = "E, dd MMM yyyy HH:mm:ss Z"
+        //formatter.timeStyle = DateFormatter.Style.medium
+
+        var startStr = formatter.string(from: startTime.date)
+        self.start = startStr
+        
+    }
+    
+    @IBAction func endDatePicked(_ sender: Any) {
+        formatter.dateFormat = "E, dd MMM yyyy HH:mm:ss Z"
+        //formatter.timeStyle = DateFormatter.Style.medium
+
+        var endStr = formatter.string(from: endTime.date)
+        self.end = endStr
     }
     
     /*

@@ -13,13 +13,21 @@ class AdminViewController: UIViewController,
                            UITableViewDataSource, UITableViewDelegate{
 
     @IBOutlet weak var tableview: UITableView!
-    
     private let ref = Database.database().reference()
     let currUserID : String = (Auth.auth().currentUser?.uid)!
-//    var glasanja : [String]!
-    var glasanja = ["example"]
-    
+    var userName = "Admin"
+    var glasanja = model()
+
     override func viewDidLoad() {
+        ref.child("users/\(currUserID)/name").getData(completion:  { error, snapshot in
+          guard error == nil else {
+            print(error!.localizedDescription)
+            return;
+          }
+            self.userName = snapshot?.value as! String;
+            print(self.userName)
+        });
+        
         getData()
         super.viewDidLoad()
         
@@ -33,21 +41,30 @@ class AdminViewController: UIViewController,
             print("There are \(snapshot.childrenCount) children found")
 
             if snapshot.childrenCount > 0 {
-
+                
                 for data in snapshot.children.allObjects as! [DataSnapshot] {
-                    if let data = data.value as? [String: Any] {
+                    if let data = data.value as? [String: String] {
                         
                         print(data)
-                        print(data["question"] as Any)
-                        self.glasanja.append(data["question"] as? String ?? "N/A")
-                        print(self.glasanja)
-                        self.tableview.reloadData()
+                        if data["adminName"] == self.userName {
+                            let glasanje = zapis(prashanje: data["question"]!, pocetok: data["startDate"]!, kraj: data["endDate"]!)
+                            self.glasanja.site.append(glasanje)
+                            print(self.glasanja.site)
+                            self.tableview.reloadData()
+                        }
                     }
                 }
             }
         })
     }
     
+//    override func prepare(for seq: UIStoryboardSeque, sender: Any?){ if seg.identifier = “detailsSegue” {
+//        if let index = tableView.indexParhForSelectedRow?.row {
+//            let destVC = seq.destination as! DetailsViewController destVC.itemT = model.allItems[index]
+//            }
+//       }
+//    }
+
     @IBAction func signOutPressed(_ sender: Any) {
         try? Auth.auth().signOut()
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
@@ -63,13 +80,15 @@ class AdminViewController: UIViewController,
     //MARK: Datasource
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.glasanja.count
+        return glasanja.site.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = self.tableview.dequeueReusableCell(withIdentifier: "pollCell")!
+        let cell = self.tableview.dequeueReusableCell(withIdentifier: "pollCell", for: indexPath) as! DetailsTableViewCell
         
-        cell.textLabel?.text = self.glasanja[indexPath.row] //da zname na koj element sme
+        cell.questionTL?.text = self.glasanja.site[indexPath.row].prashanje //da zname na koj element sme
+        cell.startDateTL?.text = "start: " + self.glasanja.site[indexPath.row].pocetok
+        cell.endDateTL?.text = "end: " + self.glasanja.site[indexPath.row].kraj
         
         return cell
     }

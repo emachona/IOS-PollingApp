@@ -78,10 +78,6 @@ class SignUpViewController: UIViewController {
                     let req = Auth.auth().currentUser?.createProfileChangeRequest();
                     req?.displayName = "Administrator"
                     req?.commitChanges(completion: nil)
-//                    let storyboard = UIStoryboard(name: "Main", bundle: nil)
-//                    let vc = storyboard.instantiateViewController(identifier:"Login")
-//                    vc.modalPresentationStyle = .overFullScreen
-//                    self.present(vc, animated: true)
                     self.performSegue(withIdentifier: "adminSegue1", sender: nil)
                 }
                 else {
