@@ -59,6 +59,25 @@ class VoterViewController: UIViewController, UITableViewDataSource, UITableViewD
         return cell
     }
     
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(identifier:"votingPage")as? VotingViewController
+        //let vc = storyboard?.instantiateViewController(withIdentifier: "votingPage) as? votingPage
+        vc?.quest = glasanja.site[indexPath.row].prashanje
+        print(vc?.quest as Any)
+        vc!.modalPresentationStyle = .overFullScreen
+        present(vc!, animated: true)
+        //navigationController?.pushViewController(vc!, animated: true)
+    }
+    
+    @IBAction func signOutPressed(_ sender: Any) {
+        try? Auth.auth().signOut()
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(identifier:"Login")
+        vc.modalPresentationStyle = .overFullScreen
+        present(vc, animated: true)
+    }
+    
     @IBAction func unwindToFirstViewController(_ sender: UIStoryboardSegue) {
          // No code needed, no need to connect the IBAction explicitely
         }
