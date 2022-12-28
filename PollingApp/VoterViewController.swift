@@ -15,13 +15,38 @@ class VoterViewController: UIViewController, UITableViewDataSource, UITableViewD
     private let ref = Database.database().reference()
     let currUserID : String = (Auth.auth().currentUser?.uid)!
     var glasanja = model()
+    var notShowing = [String]()
+    var toShow = [String]()
     
     override func viewDidLoad() {
-        getData()
+        getResultsData()
         super.viewDidLoad()
         
         self.tableview.dataSource = self
         self.tableview.delegate = self
+    }
+    
+    func getResultsData() {
+        ref.child("results").observeSingleEvent(of: .value, with: { (snapshot) in
+            
+            print("There are \(snapshot.childrenCount) results found where you voted")
+            
+            if snapshot.childrenCount > 0 {
+                print("childrenCount > 0")
+                
+                for data in snapshot.children.allObjects as! [DataSnapshot] {
+                    if let data = data.value as? [String: Any] {
+                        print(data)
+                        if data["voter"] as! String == self.currUserID {//gi pominuva polls i gleda kade currUser e voter
+                            let anketaId = data["questionID"]//gi zema site polls kade currUser e voter
+                            self.notShowing.append(anketaId! as! String)//gi stava polls za prikaz vo niza
+                            print(self.notShowing)
+                            self.getData()
+                        }
+                    }
+                }
+            }
+        })
     }
     
     func getData() {
@@ -32,13 +57,18 @@ class VoterViewController: UIViewController, UITableViewDataSource, UITableViewD
             if snapshot.childrenCount > 0 {
 
                 for data in snapshot.children.allObjects as! [DataSnapshot] {
-                    if let data = data.value as? [String: String] {
-                        
-                        print(data)
-                        let glasanje = zapis(prashanje: data["question"]!, pocetok: data["startDate"]!, kraj: data["endDate"]!)
-                        self.glasanja.site.append(glasanje)
-                        print(self.glasanja.site)
-                        self.tableview.reloadData()
+                    if let anketa = data.value as? [String: String] {
+                        for pollId in self.notShowing{ //proveri za site anketi za koi korisnikot glasal
+                            if data.key != pollId && self.toShow.contains(data.key) != true{ //ako momentalno razgleduvanata anketa
+                                //ima razlicen id od proverkata I ne e veke zapisano, stavi go vo tabela
+                                //ako e anketa koja e glasana ILI veke ja pominavme i prikazavme, skokni
+                                self.toShow.append(data.key)
+                                let glasanje = zapis(prashanje: anketa["question"]!, pocetok: anketa["startDate"]!, kraj: anketa["endDate"]!)
+                                self.glasanja.site.append(glasanje)
+                                print(self.glasanja.site)
+                                self.tableview.reloadData()
+                            }
+                        }
                     }
                 }
             }
