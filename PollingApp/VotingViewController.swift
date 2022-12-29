@@ -8,14 +8,18 @@
 import UIKit
 import FirebaseAuth
 import FirebaseDatabase
+import CoreLocation
 
-class VotingViewController: UIViewController{
+class VotingViewController: UIViewController, CLLocationManagerDelegate{
 
+    var manager = CLLocationManager()
     public var quest = ""
     var odgovori = [String]()
     var selectedAns = ""
     var pollID = ""
     var ansNum = 0
+    var lat = ""
+    var lon = ""
     private let ref = Database.database().reference()
     @IBOutlet weak var questionTF: UILabel!
     @IBOutlet weak var ansPicker: UIPickerView!
@@ -26,6 +30,10 @@ class VotingViewController: UIViewController{
         super.viewDidLoad()
         questionTF.text = quest
 
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyBest
+        manager.requestWhenInUseAuthorization()
+        manager.startUpdatingLocation()
         ansPicker.dataSource = self
         ansPicker.delegate = self
     }
@@ -72,6 +80,17 @@ class VotingViewController: UIViewController{
         present(vc, animated: true)
     }
     
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        let locValue:CLLocationCoordinate2D = manager.location!.coordinate
+        print("locations = \(locValue.latitude) \(locValue.longitude)")
+        self.lat = "\(locValue.latitude)"
+        self.lon = "\(locValue.longitude)"
+//        let location = CLLocationCoordinate2D(latitude: locations[0].coordinate.latitude, longitude: locations[0].coordinate.longitude)
+//        let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+//        let region = MKCoordinateRegion(center: location, span: span)
+//        self.map.setRegion(region, animated: true)
+    }
+    
     func publishResult(){
         let currUserID : String = (Auth.auth().currentUser?.uid)!
         let currentDate = Date()
@@ -87,7 +106,8 @@ class VotingViewController: UIViewController{
             "answerNumber" : ansNum+1,
             "voter" : currUserID,
             "time" : time,
-            "location" : "HERE",
+            "latitude" : self.lat,
+            "longitude" : self.lon
         ]
         
         self.ref.child("results").childByAutoId().setValue(object)

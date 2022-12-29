@@ -89,18 +89,16 @@ class CreatePollViewController: UIViewController {
     
     
     @IBAction func startDatePicked(_ sender: UIDatePicker) {
-        formatter.dateFormat = "E, dd MMM yyyy HH:mm:ss Z"
+        formatter.dateFormat = "E, dd MMM yyyy HH:mm"
         //formatter.timeStyle = DateFormatter.Style.medium
-
         var startStr = formatter.string(from: startTime.date)
         self.start = startStr
         
     }
     
     @IBAction func endDatePicked(_ sender: Any) {
-        formatter.dateFormat = "E, dd MMM yyyy HH:mm:ss Z"
+        formatter.dateFormat = "E, dd MMM yyyy HH:mm"
         //formatter.timeStyle = DateFormatter.Style.medium
-
         var endStr = formatter.string(from: endTime.date)
         self.end = endStr
     }

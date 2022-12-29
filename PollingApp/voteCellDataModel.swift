@@ -12,6 +12,7 @@ struct glas {
     var odgovor = ""
     var pocetok = ""
     var kraj = ""
+    var status = 0
 }
 
 class voteModel {

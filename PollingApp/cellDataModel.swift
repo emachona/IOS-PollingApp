@@ -11,6 +11,7 @@ struct zapis {
     var prashanje = ""
     var pocetok = ""
     var kraj = ""
+    var status = 0
 }
 
 class model {

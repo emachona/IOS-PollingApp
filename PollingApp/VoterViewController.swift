@@ -17,11 +17,14 @@ class VoterViewController: UIViewController, UITableViewDataSource, UITableViewD
     var glasanja = model()
     var notShowing = [String]()
     var toShow = [String]()
+    let currentDateTime = Date()
+    let formatter = DateFormatter()
     
     override func viewDidLoad() {
         getResultsData()
         super.viewDidLoad()
         
+        formatter.dateFormat = "E, dd MMM yyyy HH:mm"
         self.tableview.dataSource = self
         self.tableview.delegate = self
     }
@@ -29,22 +32,21 @@ class VoterViewController: UIViewController, UITableViewDataSource, UITableViewD
     func getResultsData() {
         ref.child("results").observeSingleEvent(of: .value, with: { (snapshot) in
             
-            print("There are \(snapshot.childrenCount) results found where you voted")
+            print("There are \(snapshot.childrenCount) results found where someone voted")
             
             if snapshot.childrenCount > 0 {
-                print("childrenCount > 0")
                 
                 for data in snapshot.children.allObjects as! [DataSnapshot] {
                     if let data = data.value as? [String: Any] {
-                        print(data)
                         if data["voter"] as! String == self.currUserID {//gi pominuva polls i gleda kade currUser e voter
                             let anketaId = data["questionID"]//gi zema site polls kade currUser e voter
-                            self.notShowing.append(anketaId! as! String)//gi stava polls za prikaz vo niza
-                            print(self.notShowing)
-                            self.getData()
+                            self.notShowing.append(anketaId! as! String)//gi stava polls kade glasal koi NE se za prikaz vo niza
                         }
                     }
                 }
+                print("Listata notShowing e:")
+                print(self.notShowing)
+                self.getData()
             }
         })
     }
@@ -52,17 +54,24 @@ class VoterViewController: UIViewController, UITableViewDataSource, UITableViewD
     func getData() {
         ref.child("polls").observeSingleEvent(of: .value, with: { (snapshot) in
             
-            print("There are \(snapshot.childrenCount) children found")
+            print("There are \(snapshot.childrenCount) polls found")
 
             if snapshot.childrenCount > 0 {
 
                 for data in snapshot.children.allObjects as! [DataSnapshot] {
                     if let anketa = data.value as? [String: String] {
-                        for pollId in self.notShowing{ //proveri za site anketi za koi korisnikot glasal
-                            if data.key != pollId && self.toShow.contains(data.key) != true{ //ako momentalno razgleduvanata anketa
-                                //ima razlicen id od proverkata I ne e veke zapisano, stavi go vo tabela
-                                //ako e anketa koja e glasana ILI veke ja pominavme i prikazavme, skokni
-                                self.toShow.append(data.key)
+                        if self.notShowing.isEmpty{
+                            print("Nema nisto vo notShowing")
+                            if anketa["active"] == "true"{
+                                let glasanje = zapis(prashanje: anketa["question"]!, pocetok: anketa["startDate"]!, kraj: anketa["endDate"]!)
+                                self.glasanja.site.append(glasanje)
+                                print(self.glasanja.site)
+                                self.tableview.reloadData()
+                            }
+                        }else{
+                            if(self.notShowing.contains(data.key)){
+                                continue;
+                            }else if anketa["active"] == "true"{
                                 let glasanje = zapis(prashanje: anketa["question"]!, pocetok: anketa["startDate"]!, kraj: anketa["endDate"]!)
                                 self.glasanja.site.append(glasanje)
                                 print(self.glasanja.site)
@@ -71,6 +80,7 @@ class VoterViewController: UIViewController, UITableViewDataSource, UITableViewD
                         }
                     }
                 }
+                print(self.glasanja.site)
             }
         })
     }
@@ -81,7 +91,24 @@ class VoterViewController: UIViewController, UITableViewDataSource, UITableViewD
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = self.tableview.dequeueReusableCell(withIdentifier: "pollCell", for: indexPath) as! DetailsTableViewCell
-        
+        formatter.dateFormat = "E, dd MMM yyyy HH:mm"
+        let start = formatter.date(from:self.glasanja.site[indexPath.row].pocetok)!
+        let end = formatter.date(from:self.glasanja.site[indexPath.row].kraj)!
+        if end < currentDateTime {
+            //finished
+            cell.contentView.backgroundColor = #colorLiteral(red: 0.6007743047, green: 0.6246629124, blue: 0.6154355441, alpha: 1)
+            glasanja.site[indexPath.row].status = 2
+        }else if currentDateTime < start{
+            //not started
+            cell.contentView.backgroundColor = #colorLiteral(red: 0.2392156869, green: 0.6745098233, blue: 0.9686274529, alpha: 1)
+            glasanja.site[indexPath.row].status = 0
+        }else if start < currentDateTime {
+            //active
+            cell.contentView.backgroundColor = #colorLiteral(red: 0.686188817, green: 1, blue: 0.737815595, alpha: 1)
+            glasanja.site[indexPath.row].status = 1
+        }else {
+            cell.contentView.backgroundColor = UIColor.white
+        }
         cell.questionTL?.text = self.glasanja.site[indexPath.row].prashanje //da zname na koj element sme
         cell.startDateTL?.text = "start: " + self.glasanja.site[indexPath.row].pocetok
         cell.endDateTL?.text = "end: " + self.glasanja.site[indexPath.row].kraj
